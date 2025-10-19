@@ -1,0 +1,16 @@
+name: Run API on GitHub
+
+on:
+  workflow_dispatch:  # artinya: bisa dijalankan manual dari tab "Actions"
+
+jobs:
+  call-api:
+    runs-on: ubuntu-latest  # GitHub pakai server Linux
+
+    steps:
+      - name: Jalankan API pakai curl
+        run: |
+          curl -X POST https://data.gopher-ai.com/api/v1/search/live \
+            -H "Authorization: Bearer ${{ secrets.GOPHER_API_KEY }}" \
+            -H "Content-Type: application/json" \
+            -d '{"type":"twitter","arguments":{"type":"searchbyquery","query":"AI","max_results":10}}'
