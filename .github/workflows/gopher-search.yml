@@ -1,0 +1,50 @@
+name: Gopher Live Search (reddit)
+
+on:
+  workflow_dispatch:    # jalankan manual dari tab Actions
+
+jobs:
+  run-search:
+    runs-on: ubuntu-latest
+    env:
+      API_URL: https://data.gopher-ai.com/api/v1/search/live
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Write payload
+        run: |
+          cat > payload.json <<'JSON'
+          {
+            "type": "reddit",
+            "arguments": {
+              "type": "scraper",
+              "url": "https://www.reddit.com/r/Bitcoin/",
+              "format": "json",
+              "contentType": "posts",
+              "sortType": "top",
+              "limit": 10
+            }
+          }
+          JSON
+
+      - name: Call Gopher API
+        id: call_api
+        run: |
+          echo "Calling Gopher API..."
+          HTTP_STATUS=$(curl -sS -w "%{http_code}" -o response.json \
+            -H "Authorization: Bearer ${{ secrets.GOPHER_API_KEY }}" \
+            -H "Content-Type: application/json" \
+            -X POST \
+            --data @payload.json \
+            "${API_URL}")
+          echo "http_status=$HTTP_STATUS" >> $GITHUB_OUTPUT
+
+      - name: Show HTTP status
+        run: echo "HTTP status: ${{ steps.call_api.outputs.http_status }}"
+
+      - name: Upload response artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: gopher-search-response
+          path: response.json
